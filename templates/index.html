@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    </head>
+    <body class="dot-grid text-zinc-800 antialiased">
+            <div class="mt-[43px] flex justify-center">
+                <nav
+    x-ref="nav"
+    x-data="{
+      active: ['/','/search','/resume','/profile'].indexOf(window.location.pathname),
+      hovering: false,
+      hoveredIndex: null,
+      bubbleX: ['/', '/search', '/resume', '/profile'].indexOf(window.location.pathname) * 112,
+      stretch: 0,
+      squish: 1,
+      lastTime: null,
+      settleTimer: null,
+      tabs: [{label:'Home', href:'/'}, {label:'Search', href:'/search'}, {label:'Resume', href:'/resume'}, {label:'Profile', href:'/profile'}],
+      tabWidth: 112,
+      padding: 6,
+      track(e) {
+        const rect = this.$refs.nav.getBoundingClientRect()
+        const totalWidth = this.tabs.length * this.tabWidth
+        const cursor = e.clientX - rect.left - this.padding
+        let left = cursor - this.tabWidth / 2
+        left = Math.max(0, Math.min(totalWidth - this.tabWidth, left))
+ 
+        const now = performance.now()
+        if (this.lastTime !== null) {
+          const dt = Math.max(now - this.lastTime, 1)
+          const velocity = (left - this.bubbleX) / dt
+          const amount = Math.max(0, Math.min(0.35, Math.abs(velocity) * 0.05))
+          this.stretch = amount
+          this.squish = 1 - amount * 0.6
+          clearTimeout(this.settleTimer)
+          this.settleTimer = setTimeout(() => { this.stretch = 0; this.squish = 1 }, 100)
+        }
+        this.lastTime = now
+        this.bubbleX = left
+        this.hoveredIndex = Math.max(0, Math.min(this.tabs.length - 1, Math.floor(cursor / this.tabWidth)))
+        this.hovering = true
+      },
+      release() {
+        this.hovering = false
+        this.hoveredIndex = null
+        this.bubbleX = this.active * this.tabWidth
+        this.stretch = 0
+        this.squish = 1
+        this.lastTime = null
+        clearTimeout(this.settleTimer)
+      }
+    }"
+    @mousemove="track($event)"
+    @mouseleave="release()"
+    class="relative inline-flex items-center bg-white rounded-full p-1.5 shadow-sm border border-stone-200"
+  >
+    <div
+      class="absolute top-1.5 left-1.5 h-11 bg-zinc-800 rounded-full"
+      :style="`width: ${tabWidth}px; translate: ${bubbleX}px 0; scale: ${1 + stretch} ${squish}; transition: translate ${hovering ? '150ms ease-out' : '500ms cubic-bezier(0.34,1.56,0.64,1)'}, scale 180ms cubic-bezier(0.34,1.56,0.64,1)`"
+    ></div>
+ 
+    <template x-for="(tab, index) in tabs" :key="index">
+      <a
+        :href="tab.href"
+        @click="active = index"
+        :aria-current="active === index ? 'page' : 'false'"
+        class="relative z-10 flex items-center justify-center gap-2 h-11 rounded-full text-sm font-medium transition-colors duration-300"
+        :style="`width: ${tabWidth}px`"
+        :class="(hovering ? hoveredIndex === index : active === index) ? 'text-white' : 'text-stone-500'"
+      >
+        <svg x-show="tab.label === 'Home'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10" />
+        </svg>
+        <svg x-show="tab.label === 'Search'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7" />
+          <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
+        </svg>
+        <svg x-show="tab.label === 'Resume'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 4h4l2 3 2-3h4a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" />
+        </svg>
+        <svg x-show="tab.label === 'Profile'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="4" />
+          <path stroke-linecap="round" d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+        </svg>
+        <span x-text="tab.label"></span>
+      </a>
+    </template>
+  </nav>
+            </div>
+            <h1>
+              Homepage TODO: add information on what app does, who its for. 
+            </h1>
+
+    </body>
+</html>

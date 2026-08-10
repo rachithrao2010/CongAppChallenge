@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instant File Preview</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    .upload-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .custom-label {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #0076ff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .custom-label:hover {
+      background: #0056b3;
+    }
+    #preview-container {
+      margin-top: 30px;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      background: #fafafa;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-element {
+      display: none;
+      max-width: 100%;
+      border-radius: 6px;
+    }
+    #pdf-preview {
+      width: 100%;
+      height: 500px;
+    }
+    #text-preview {
+      width: 100%;
+      max-height: 400px;
+      overflow-y: auto;
+      text-align: left;
+      white-space: pre-wrap;
+      background: #272822;
+      color: #f8f8f2;
+      padding: 15px;
+      font-family: monospace;
+    }
+    .placeholder-text {
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="upload-container">
+    <h2>Upload & Preview File</h2>
+    
+    <label for="file-uploader" class="custom-label">Choose a File</label>
+    <input type="file" id="file-uploader" accept="application/pdf">
+
+    <div id="preview-container">
+      <span id="placeholder" class="placeholder-text">Your file preview will appear here</span>
+      <embed id="pdf-preview" class="preview-element" type="application/pdf">
+    </div>
+  </div>
+
+  <script>
+    const uploader = document.getElementById('file-uploader');
+    const placeholder = document.getElementById('placeholder');
+    
+    // Preview Elements
+    const pdfPreview = document.getElementById('pdf-preview');
+    
+    const elements = [pdfPreview, placeholder];
+
+    function hideAllPreviews() {
+      elements.forEach(el => el.style.display = 'none');
+    }
+
+    uploader.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      hideAllPreviews();
+
+      // Handle Binary Media via Object URL
+      const fileURL = URL.createObjectURL(file);
+
+      if (file.type === 'application/pdf') {
+        pdfPreview.src = fileURL;
+        pdfPreview.style.display = 'block';
+      }
+    });
+  </script>
+
+</body>
+</html>
