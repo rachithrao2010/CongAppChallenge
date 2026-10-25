@@ -1,0 +1,41 @@
+<div class="grid sm:grid-cols-2 gap-4">
+    <label class="block">
+        <span class="text-sm font-medium">Branch</span>
+        <select x-model="profile.branch" class="field mt-1.5">
+            <option value="">Choose one</option>
+            <option>Army</option>
+            <option>Navy</option>
+            <option>Air Force</option>
+            <option>Marine Corps</option>
+            <option>Coast Guard</option>
+            <option>Space Force</option>
+            <option>National Guard / Reserve</option>
+        </select>
+    </label>
+    <label class="block">
+        <span class="text-sm font-medium">What you did</span>
+        <input x-model="profile.role" class="field mt-1.5" placeholder="e.g. 11B Infantry, Navy SEAL, 12B Combat Engineer">
+    </label>
+    <label class="block">
+        <span class="text-sm font-medium">Years served</span>
+        <input x-model="profile.years" type="number" min="0" max="45" class="field mt-1.5" placeholder="e.g. 8">
+    </label>
+    <label class="block">
+        <span class="text-sm font-medium">Rank when you got out</span>
+        <input x-model="profile.rank" class="field mt-1.5" placeholder="e.g. E-6 / Staff Sergeant">
+    </label>
+    <label class="block sm:col-span-2">
+        <span class="text-sm font-medium">Leadership</span>
+        <select x-model="profile.leadership" class="field mt-1.5">
+            <option value="">Choose one</option>
+            <option>No one reported to me</option>
+            <option>Led a small team (2-10 people)</option>
+            <option>Led a platoon or division (10-50 people)</option>
+            <option>Led 50+ people</option>
+        </select>
+    </label>
+    <label class="block sm:col-span-2">
+        <span class="text-sm font-medium">Anything you're drawn to? <span class="text-stone-400 font-normal">(optional)</span></span>
+        <input x-model="profile.interests" class="field mt-1.5" placeholder="e.g. working outdoors, tech, helping people">
+    </label>
+</div>

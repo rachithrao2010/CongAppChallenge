@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Jobs{% endblock %}
+{% block content %}
+<div x-data='jobs({{ profile | tojson }})'>
+    <p class="text-xs font-mono text-stone-400">02 / Jobs</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Find where you fit</h1>
+    <p class="mt-2 text-stone-500">Tell us a bit about your service and we'll suggest civilian careers that put it to work.</p>
+
+    <form @submit.prevent="submit()" class="mt-8 bg-white border border-stone-200 rounded-2xl shadow-sm p-6">
+        {% include '_profile_fields.html' %}
+
+        <div class="mt-6 flex items-center gap-4">
+            <button class="rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700 disabled:opacity-50" :disabled="loading">
+                <span x-text="loading ? 'Matching...' : 'Match me'"></span>
+            </button>
+            <p x-show="error" x-text="error" class="text-sm text-red-600"></p>
+        </div>
+    </form>
+
+    <section x-show="results.length" x-cloak class="mt-6 grid sm:grid-cols-2 gap-4">
+        <template x-for="job in results" :key="job.title">
+            <article class="bg-white border border-stone-200 rounded-2xl shadow-sm p-6 flex flex-col">
+                <p class="text-xs font-mono text-stone-400" x-text="job.industry"></p>
+                <h2 class="mt-2 text-lg font-semibold" x-text="job.title"></h2>
+                <p class="mt-1 text-sm text-stone-500" x-text="job.why"></p>
+                <div class="mt-4 flex flex-wrap gap-1.5">
+                    <template x-for="skill in job.skills">
+                        <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1" x-text="skill"></span>
+                    </template>
+                </div>
+                <a :href="`/certs?industry=${encodeURIComponent(job.industry)}`" class="mt-auto pt-5 text-sm font-medium text-stone-500 hover:text-zinc-800 transition">Find certs for this &rarr;</a>
+            </article>
+        </template>
+    </section>
+</div>
+
+<script>
+function jobs(saved) {
+  return {
+    profile: { branch: '', role: '', years: '', rank: '', leadership: '', interests: '', ...saved },
+    results: [],
+    loading: false,
+    error: '',
+    async submit() {
+      this.loading = true
+      this.error = ''
+      try {
+        const data = await post('/api/jobs', this.profile)
+        this.results = data.jobs || []
+      } catch (e) {
+        this.error = e.message
+      } finally {
+        this.loading = false
+      }
+    }
+  }
+}
+</script>
+{% endblock %}

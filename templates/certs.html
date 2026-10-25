@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Certs{% endblock %}
+{% block content %}
+<div x-data='certs({{ industry | tojson }})'>
+    <p class="text-xs font-mono text-stone-400">03 / Certs</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Get certified</h1>
+    <p class="mt-2 text-stone-500">Pick the industry you want to get into and we'll lay out which certifications to go after, in order.</p>
+
+    <form @submit.prevent="submit()" class="mt-8 bg-white border border-stone-200 rounded-2xl shadow-sm p-6">
+        <div class="grid sm:grid-cols-2 gap-4">
+            <label class="block">
+                <span class="text-sm font-medium">Industry</span>
+                <input x-model="industry" list="industries" class="field mt-1.5" placeholder="e.g. IT & Cybersecurity">
+                <datalist id="industries">
+                    <option>IT & Cybersecurity</option>
+                    <option>Project Management</option>
+                    <option>Logistics & Supply Chain</option>
+                    <option>Healthcare</option>
+                    <option>Skilled Trades</option>
+                    <option>Law Enforcement & Security</option>
+                    <option>Aviation</option>
+                    <option>Energy & Utilities</option>
+                    <option>Finance</option>
+                </datalist>
+            </label>
+            <label class="block">
+                <span class="text-sm font-medium">Specific job <span class="text-stone-400 font-normal">(optional)</span></span>
+                <input x-model="target" class="field mt-1.5" placeholder="e.g. SOC Analyst">
+            </label>
+        </div>
+
+        {% if profile %}
+        <p class="mt-4 text-xs text-stone-400">Using your profile from Jobs ({{ profile.branch }}, {{ profile.role }}) to skip what you already know.</p>
+        {% endif %}
+
+        <div class="mt-6 flex items-center gap-4">
+            <button class="rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700 disabled:opacity-50" :disabled="loading">
+                <span x-text="loading ? 'Searching...' : 'Find certs'"></span>
+            </button>
+            <p x-show="error" x-text="error" class="text-sm text-red-600"></p>
+        </div>
+    </form>
+
+    <section x-show="results.length" x-cloak class="mt-6 space-y-3">
+        <template x-for="(cert, i) in results" :key="cert.name">
+            <article class="bg-white border border-stone-200 rounded-2xl shadow-sm p-6 flex gap-5">
+                <span class="text-xs font-mono text-stone-400 pt-1" x-text="String(i + 1).padStart(2, '0')"></span>
+                <div class="flex-1">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 class="text-lg font-semibold" x-text="cert.name"></h2>
+                        <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1" x-text="cert.level"></span>
+                    </div>
+                    <p class="text-sm text-stone-400" x-text="cert.issuer"></p>
+                    <p class="mt-2 text-sm text-stone-500" x-text="cert.why"></p>
+                    <div class="mt-3 flex gap-5 text-xs text-stone-500">
+                        <span x-text="`Prep: ${cert.time}`"></span>
+                        <span x-text="`Exam: ${cert.cost}`"></span>
+                    </div>
+                </div>
+            </article>
+        </template>
+        <p class="text-xs text-stone-400 pt-2">Costs change often, so check with the issuer. The GI Bill can cover many exam fees.</p>
+    </section>
+</div>
+
+<script>
+function certs(industry) {
+  return {
+    industry: industry,
+    target: '',
+    results: [],
+    loading: false,
+    error: '',
+    async submit() {
+      this.loading = true
+      this.error = ''
+      try {
+        const data = await post('/api/certs', { industry: this.industry, target: this.target })
+        this.results = data.certs || []
+      } catch (e) {
+        this.error = e.message
+      } finally {
+        this.loading = false
+      }
+    }
+  }
+}
+</script>
+{% endblock %}

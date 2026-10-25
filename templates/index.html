@@ -1,98 +1,130 @@
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    </head>
-    <body class="dot-grid text-zinc-800 antialiased">
-            <div class="mt-[43px] flex justify-center">
-                <nav
-    x-ref="nav"
-    x-data="{
-      active: ['/','/search','/resume','/profile'].indexOf(window.location.pathname),
-      hovering: false,
-      hoveredIndex: null,
-      bubbleX: ['/', '/search', '/resume', '/profile'].indexOf(window.location.pathname) * 112,
-      stretch: 0,
-      squish: 1,
-      lastTime: null,
-      settleTimer: null,
-      tabs: [{label:'Home', href:'/'}, {label:'Search', href:'/search'}, {label:'Resume', href:'/resume'}, {label:'Profile', href:'/profile'}],
-      tabWidth: 112,
-      padding: 6,
-      track(e) {
-        const rect = this.$refs.nav.getBoundingClientRect()
-        const totalWidth = this.tabs.length * this.tabWidth
-        const cursor = e.clientX - rect.left - this.padding
-        let left = cursor - this.tabWidth / 2
-        left = Math.max(0, Math.min(totalWidth - this.tabWidth, left))
- 
-        const now = performance.now()
-        if (this.lastTime !== null) {
-          const dt = Math.max(now - this.lastTime, 1)
-          const velocity = (left - this.bubbleX) / dt
-          const amount = Math.max(0, Math.min(0.35, Math.abs(velocity) * 0.05))
-          this.stretch = amount
-          this.squish = 1 - amount * 0.6
-          clearTimeout(this.settleTimer)
-          this.settleTimer = setTimeout(() => { this.stretch = 0; this.squish = 1 }, 100)
-        }
-        this.lastTime = now
-        this.bubbleX = left
-        this.hoveredIndex = Math.max(0, Math.min(this.tabs.length - 1, Math.floor(cursor / this.tabWidth)))
-        this.hovering = true
-      },
-      release() {
-        this.hovering = false
-        this.hoveredIndex = null
-        this.bubbleX = this.active * this.tabWidth
-        this.stretch = 0
-        this.squish = 1
-        this.lastTime = null
-        clearTimeout(this.settleTimer)
-      }
-    }"
-    @mousemove="track($event)"
-    @mouseleave="release()"
-    class="relative inline-flex items-center bg-white rounded-full p-1.5 shadow-sm border border-stone-200"
-  >
-    <div
-      class="absolute top-1.5 left-1.5 h-11 bg-zinc-800 rounded-full"
-      :style="`width: ${tabWidth}px; translate: ${bubbleX}px 0; scale: ${1 + stretch} ${squish}; transition: translate ${hovering ? '150ms ease-out' : '500ms cubic-bezier(0.34,1.56,0.64,1)'}, scale 180ms cubic-bezier(0.34,1.56,0.64,1)`"
-    ></div>
- 
-    <template x-for="(tab, index) in tabs" :key="index">
-      <a
-        :href="tab.href"
-        @click="active = index"
-        :aria-current="active === index ? 'page' : 'false'"
-        class="relative z-10 flex items-center justify-center gap-2 h-11 rounded-full text-sm font-medium transition-colors duration-300"
-        :style="`width: ${tabWidth}px`"
-        :class="(hovering ? hoveredIndex === index : active === index) ? 'text-white' : 'text-stone-500'"
-      >
-        <svg x-show="tab.label === 'Home'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10" />
-        </svg>
-        <svg x-show="tab.label === 'Search'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="7" />
-          <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
-        </svg>
-        <svg x-show="tab.label === 'Resume'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 4h4l2 3 2-3h4a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" />
-        </svg>
-        <svg x-show="tab.label === 'Profile'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="8" r="4" />
-          <path stroke-linecap="round" d="M4 20c0-4 4-6 8-6s8 2 8 6" />
-        </svg>
-        <span x-text="tab.label"></span>
-      </a>
-    </template>
-  </nav>
-            </div>
-            <h1>
-              Homepage TODO: add information on what app does, who its for. 
-            </h1>
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block width %}max-w-5xl{% endblock %}
+{% block content %}
+<section class="hero text-center py-10">
+    <p class="text-xs font-mono text-stone-400">Chapter two</p>
+    <h1 class="mt-3 text-4xl sm:text-6xl font-semibold tracking-tight">Your next chapter<br>starts here.</h1>
+    <p class="mt-5 text-stone-500 max-w-xl mx-auto">
+        You spent years building skills the civilian world needs. Next Chapter helps you put them into words,
+        find where they fit, and plan the road from service to whatever comes next.
+    </p>
+    <div class="mt-8 flex justify-center gap-3">
+        <a href="/resume" class="inline-flex items-center rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700">Get started</a>
+        <a href="#resume" class="inline-flex items-center rounded-full border border-stone-200 bg-white text-sm font-medium px-6 h-11 transition hover:border-stone-300">See how it works</a>
+    </div>
+</section>
 
-    </body>
-</html>
+<section id="resume" class="feature">
+    <div class="feature-text">
+        <p class="text-xs font-mono text-stone-400">01 / Resume</p>
+        <h2 class="mt-2 text-3xl font-semibold tracking-tight">Say what you did in words they get.</h2>
+        <p class="mt-3 text-stone-500">
+            NCOIC, MOS, property book. Hiring managers skim right past them. Paste your resume and we'll turn the
+            jargon into plain language without losing what makes your experience stand out.
+        </p>
+        <ul class="mt-5 space-y-2 text-sm">
+            <li>Paste text or upload a PDF</li>
+            <li>Keeps your real numbers and results</li>
+            <li>Tailor it to the job you want</li>
+        </ul>
+        <a href="/resume" class="mt-6 inline-block text-sm font-medium hover:underline">Translate my resume &rarr;</a>
+    </div>
+    <div class="pinned -rotate-1">
+        <p class="text-xs font-mono text-stone-400">Before</p>
+        <p class="mt-1 text-sm text-stone-400 line-through">NCOIC of 12 Soldiers, maintained 100% accountability of $2.3M in MTOE equipment</p>
+        <p class="mt-5 text-xs font-mono text-stone-400">After</p>
+        <p class="mt-1 text-sm">Supervised a team of 12 and managed $2.3M in vehicles and equipment with zero losses.</p>
+    </div>
+</section>
+
+<section class="feature">
+    <div class="feature-text">
+        <p class="text-xs font-mono text-stone-400">02 / Jobs</p>
+        <h2 class="mt-2 text-3xl font-semibold tracking-tight">Find where your skills already fit.</h2>
+        <p class="mt-3 text-stone-500">
+            Tell us your branch, what you did and who you led. We'll point you to careers where your service
+            gives you a head start, including a few you might not have thought of.
+        </p>
+        <ul class="mt-5 space-y-2 text-sm">
+            <li>Works for every branch and role</li>
+            <li>Accounts for rank and leadership</li>
+            <li>Shows which skills carry over</li>
+        </ul>
+        <a href="/jobs" class="mt-6 inline-block text-sm font-medium hover:underline">Match me with jobs &rarr;</a>
+    </div>
+    <div class="pinned rotate-1">
+        <p class="text-xs font-mono text-stone-400">Logistics & Supply Chain</p>
+        <p class="mt-2 text-lg font-semibold">Operations Manager</p>
+        <p class="mt-1 text-sm text-stone-500">You already ran people, equipment and schedules under pressure.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">Team leadership</span>
+            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">Planning</span>
+            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">Accountability</span>
+        </div>
+    </div>
+</section>
+
+<section class="feature">
+    <div class="feature-text">
+        <p class="text-xs font-mono text-stone-400">03 / Certs</p>
+        <h2 class="mt-2 text-3xl font-semibold tracking-tight">Get the paper that opens the door.</h2>
+        <p class="mt-3 text-stone-500">
+            Some industries screen for certifications before they ever read a resume. Pick where you want to work
+            and we'll lay out which ones to get, in the order that makes sense.
+        </p>
+        <ul class="mt-5 space-y-2 text-sm">
+            <li>From entry level to advanced</li>
+            <li>Rough prep time and exam cost</li>
+            <li>Skips what your service already covers</li>
+        </ul>
+        <a href="/certs" class="mt-6 inline-block text-sm font-medium hover:underline">Find certifications &rarr;</a>
+    </div>
+    <div class="pinned -rotate-1 space-y-3">
+        {% for name, level in [('CompTIA A+', 'Entry'), ('CompTIA Security+', 'Intermediate'), ('CISSP', 'Advanced')] %}
+        <div class="flex items-center gap-4">
+            <span class="text-xs font-mono text-stone-400">0{{ loop.index }}</span>
+            <span class="flex-1 text-sm font-medium">{{ name }}</span>
+            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">{{ level }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="feature">
+    <div class="feature-text">
+        <p class="text-xs font-mono text-stone-400">04 / Roadmap</p>
+        <h2 class="mt-2 text-3xl font-semibold tracking-tight">See the whole road ahead.</h2>
+        <p class="mt-3 text-stone-500">
+            We take everything you've told us and build a step-by-step plan, from your last months in uniform to
+            feeling settled. Careers, benefits, money and community, all in one place.
+        </p>
+        <ul class="mt-5 space-y-2 text-sm">
+            <li>Built from your resume, jobs and certs</li>
+            <li>Check off steps as you go</li>
+            <li>Print it and pin it up</li>
+        </ul>
+        <a href="/roadmap" class="mt-6 inline-block text-sm font-medium hover:underline">Build my roadmap &rarr;</a>
+    </div>
+    <div class="pinned rotate-1">
+        {% for time, title in [('6-12 months before', 'Get ready to separate'), ('0-2 months', 'Translate your experience'), ('2-6 months', 'Build credentials')] %}
+        <div class="flex gap-4">
+            <div class="flex flex-col items-center">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-mono {{ 'bg-zinc-800 text-white' if loop.first else 'border border-stone-200 text-stone-500' }}">0{{ loop.index }}</span>
+                {% if not loop.last %}<span class="flex-1 my-1 border-l-2 border-dashed border-stone-300"></span>{% endif %}
+            </div>
+            <div class="{{ '' if loop.last else 'pb-4' }}">
+                <p class="text-xs font-mono text-stone-400">{{ time }}</p>
+                <p class="text-sm font-medium">{{ title }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="mt-24 text-center">
+    <h2 class="text-3xl font-semibold tracking-tight">Ready when you are.</h2>
+    <p class="mt-3 text-stone-500">Start with your resume. Everything else builds from there.</p>
+    <a href="/resume" class="mt-6 inline-flex items-center rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700">Get started</a>
+</section>
+{% endblock %}
