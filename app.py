@@ -13,7 +13,8 @@ import redact
 
 load_dotenv()
 
-app = Flask(__name__)
+# Vercel serves public/ from its CDN, Flask only uses this locally
+app = Flask(__name__, static_folder='public/static')
 app.secret_key = os.environ.get('SECRET_KEY', 'dev')
 
 PROFILE_FIELDS = ['branch', 'role', 'years', 'rank', 'leadership', 'interests']

@@ -69,6 +69,11 @@ function resume() {
     copied: false,
     pick(e) {
       this.file = e.target.files[0] || null
+      this.error = ''
+      if (this.file && this.file.size > 4 * 1024 * 1024) {
+        this.error = 'That PDF is over 4 MB. Try exporting a smaller one or paste the text instead.'
+        this.file = null
+      }
       this.preview = this.file ? URL.createObjectURL(this.file) : null
     },
     async submit() {
