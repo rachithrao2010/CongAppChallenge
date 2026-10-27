@@ -8,7 +8,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
-            // sampled from the logo. olive is the main accent, navy for headings, red only for errors
+
             tailwind.config = {
                 theme: {
                     extend: {
@@ -82,9 +82,8 @@
     class="relative inline-flex items-center bg-white rounded-full p-1.5 shadow-sm border border-stone-200"
   >
     <div
-      class="absolute top-1.5 left-1.5 h-11 bg-olive-700 rounded-full"
-      style="width: 136px; translate: {{ active * 136 }}px 0"
-      :style="`width: ${tabWidth}px; translate: ${bubbleX}px 0; scale: ${1 + stretch} ${squish}; transition: translate ${hovering ? '150ms ease-out' : '500ms cubic-bezier(0.34,1.56,0.64,1)'}, scale 180ms cubic-bezier(0.34,1.56,0.64,1)`"
+      class="nav-bubble nav-bubble-{{ active }} absolute top-1.5 left-1.5 h-11 bg-olive-700 rounded-full"
+      x-bind:style="`width: ${tabWidth}px; translate: ${bubbleX}px 0; scale: ${1 + stretch} ${squish}; transition: translate ${hovering ? '150ms ease-out' : '500ms cubic-bezier(0.34,1.56,0.64,1)'}, scale 180ms cubic-bezier(0.34,1.56,0.64,1)`"
     ></div>
 
     <template x-for="(tab, index) in tabs" :key="index">

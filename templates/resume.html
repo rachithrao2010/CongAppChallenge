@@ -18,7 +18,7 @@
             <span class="text-sm font-medium" x-text="file ? file.name : 'Choose a PDF'"></span>
             <span class="text-xs text-stone-400" x-show="!file">It needs to have selectable text, not a scan</span>
         </label>
-        <embed x-show="mode === 'upload' && preview" x-cloak :src="preview" type="application/pdf" class="mt-4 w-full h-96 rounded-xl border border-stone-200">
+        <embed x-show="mode === 'upload' && preview" x-cloak :src="preview && preview + PDF_VIEW" type="application/pdf" class="mt-4 w-full h-96 rounded-xl border border-stone-200">
 
         <p class="mt-3 text-xs text-stone-400">Names, dates, locations and contact info are removed before your resume is sent to the AI, and added back afterward.</p>
 
@@ -52,7 +52,17 @@
             </div>
         </div>
         <p x-show="saveError" x-text="saveError" class="mt-2 text-sm text-flag-600"></p>
-        <pre x-text="result" class="mt-4 whitespace-pre-wrap font-sans text-sm leading-relaxed"></pre>
+
+        <div class="mt-4 inline-flex bg-stone-100 rounded-full p-1 text-sm font-medium">
+            <button type="button" @click="show('text')" class="px-4 h-8 rounded-full transition" :class="view === 'text' ? 'bg-white shadow-sm' : 'text-stone-500'">Text</button>
+            <button type="button" @click="show('pdf')" class="px-4 h-8 rounded-full transition" :class="view === 'pdf' ? 'bg-white shadow-sm' : 'text-stone-500'">PDF</button>
+        </div>
+
+        <pre x-show="view === 'text'" x-text="result" class="mt-4 whitespace-pre-wrap font-sans text-sm leading-relaxed"></pre>
+        <div x-show="view === 'pdf'" x-cloak class="mt-4">
+            <p x-show="!pdfUrl" class="h-[42rem] flex items-center justify-center rounded-xl border border-stone-200 text-sm text-stone-400">Building your PDF...</p>
+            <embed x-show="pdfUrl" :src="pdfUrl && pdfUrl + PDF_VIEW" type="application/pdf" class="w-full h-[42rem] rounded-xl border border-stone-200">
+        </div>
 
         <div x-show="changes.length" class="mt-6 pt-5 border-t border-stone-100">
             <h3 class="text-sm font-medium text-stone-500">Changes</h3>
@@ -66,6 +76,9 @@
 </div>
 
 <script>
+// start the browser's pdf viewer without the thumbnail sidebar, fitted to the width
+const PDF_VIEW = '#navpanes=0&view=FitH'
+
 function resume() {
   return {
     mode: 'paste',
@@ -80,6 +93,8 @@ function resume() {
     copied: false,
     saving: false,
     saveError: '',
+    view: 'text',
+    pdfUrl: null,
     progress: 0,
     stage() {
       if (this.progress >= 100) return 'Done'
@@ -115,6 +130,9 @@ function resume() {
         const data = await post('/api/resume', form)
         this.result = data.resume
         this.changes = data.changes || []
+        if (this.pdfUrl) URL.revokeObjectURL(this.pdfUrl)
+        this.pdfUrl = null
+        if (this.view === 'pdf') this.show('pdf')
         this.progress = 100
         setTimeout(() => { this.progress = 0 }, 800)
       } catch (e) {
@@ -130,22 +148,38 @@ function resume() {
       this.copied = true
       setTimeout(() => { this.copied = false }, 1500)
     },
+    async build(format) {
+      const res = await fetch('/api/resume/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: this.result, format }),
+      })
+      if (!res.ok) {
+        throw new Error((await res.json().catch(() => ({}))).error || "Couldn't make the file. Try again.")
+      }
+      const name = (res.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)"?/)
+      return { blob: await res.blob(), name: name ? name[1] : `Resume.${format}` }
+    },
+    async show(view) {
+      this.view = view
+      if (view !== 'pdf' || this.pdfUrl) return
+      this.saveError = ''
+      try {
+        const { blob } = await this.build('pdf')
+        this.pdfUrl = URL.createObjectURL(blob)
+      } catch (e) {
+        this.saveError = e.message
+        this.view = 'text'
+      }
+    },
     async download(format) {
       this.saving = true
       this.saveError = ''
       try {
-        const res = await fetch('/api/resume/download', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: this.result, format }),
-        })
-        if (!res.ok) {
-          throw new Error((await res.json().catch(() => ({}))).error || "Couldn't make the file. Try again.")
-        }
-        const name = (res.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)"?/)
+        const { blob, name } = await this.build(format)
         const link = document.createElement('a')
-        link.href = URL.createObjectURL(await res.blob())
-        link.download = name ? name[1] : `Resume.${format}`
+        link.href = URL.createObjectURL(blob)
+        link.download = name
         link.click()
         setTimeout(() => URL.revokeObjectURL(link.href), 1000)
       } catch (e) {
