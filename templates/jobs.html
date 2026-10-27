@@ -1,52 +1,125 @@
 {% extends 'base.html' %}
 {% block title %}Jobs{% endblock %}
 {% block content %}
-<div x-data='jobs({{ profile | tojson }})'>
-    <p class="text-xs font-mono text-stone-400">02 / Jobs</p>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Find where you fit</h1>
-    <p class="mt-2 text-stone-500">Tell us a bit about your service and we'll suggest civilian careers that put it to work.</p>
+<div x-data='jobs()'>
+    <h1 class="text-3xl font-semibold tracking-tight text-navy-900">Job matcher</h1>
+    <p class="mt-2 text-stone-500">Find your military job and see which civilian jobs it lines up with.</p>
 
-    <form @submit.prevent="submit()" class="mt-8 bg-white border border-stone-200 rounded-2xl shadow-sm p-6">
-        {% include '_profile_fields.html' %}
+    <form @submit.prevent="submit()" class="mt-8 bg-white border border-stone-200 rounded-xl p-6">
+        <div class="grid sm:grid-cols-3 gap-4">
+            <label class="block">
+                <span class="text-sm font-medium">Branch</span>
+                <select x-model="branch" @change="clear()" class="field mt-1.5">
+                    <option value="">Choose one</option>
+                    {% for branch in branches %}
+                    <option>{{ branch }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <div class="relative sm:col-span-2" @click.outside="options = []">
+                <label class="block">
+                    <span class="text-sm font-medium">Your job</span>
+                    <input x-model="query" @input.debounce.250ms="lookup()" @keydown.escape="options = []" :disabled="!branch"
+                           class="field mt-1.5 disabled:bg-stone-50" :placeholder="branch ? 'Code or title, like 11B or Infantryman' : 'Pick a branch first'">
+                </label>
+                <ul x-show="options.length" x-cloak class="absolute z-20 mt-1 w-full max-h-72 overflow-y-auto bg-white border border-stone-200 rounded-xl shadow-sm py-1">
+                    <template x-for="option in options" :key="option.id">
+                        <li>
+                            <button type="button" @click="choose(option)" class="w-full text-left px-4 py-2 text-sm hover:bg-stone-50">
+                                <span class="font-medium" x-text="option.code"></span>
+                                <span x-text="option.title"></span>
+                                <span class="text-stone-400" x-text="option.grade"></span>
+                            </button>
+                        </li>
+                    </template>
+                </ul>
+                <p x-show="searched && !options.length && !picked" x-cloak class="mt-1.5 text-xs text-stone-400">Nothing found. Try your job code, or a word from the title.</p>
+            </div>
+        </div>
+
+        <label class="mt-4 flex items-center gap-2 text-sm">
+            <input type="checkbox" x-model="led" class="rounded border-stone-300 accent-olive-700">
+            I was in charge of other people
+        </label>
 
         <div class="mt-6 flex items-center gap-4">
-            <button class="rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700 disabled:opacity-50" :disabled="loading">
-                <span x-text="loading ? 'Matching...' : 'Match me'"></span>
+            <button class="rounded-full bg-olive-700 text-white text-sm font-medium px-6 h-11 transition hover:bg-olive-600 disabled:opacity-50" :disabled="loading">
+                <span x-text="loading ? 'Looking...' : 'Find jobs'"></span>
             </button>
-            <p x-show="error" x-text="error" class="text-sm text-red-600"></p>
+            <p x-show="error" x-text="error" class="text-sm text-flag-600"></p>
         </div>
     </form>
 
-    <section x-show="results.length" x-cloak class="mt-6 grid sm:grid-cols-2 gap-4">
-        <template x-for="job in results" :key="job.title">
-            <article class="bg-white border border-stone-200 rounded-2xl shadow-sm p-6 flex flex-col">
-                <p class="text-xs font-mono text-stone-400" x-text="job.industry"></p>
-                <h2 class="mt-2 text-lg font-semibold" x-text="job.title"></h2>
-                <p class="mt-1 text-sm text-stone-500" x-text="job.why"></p>
-                <div class="mt-4 flex flex-wrap gap-1.5">
-                    <template x-for="skill in job.skills">
-                        <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1" x-text="skill"></span>
-                    </template>
+    <section x-show="results.length" x-cloak class="mt-6 space-y-3">
+        <template x-for="job in results" :key="job.code">
+            <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-6">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 class="text-lg font-semibold" x-text="job.title"></h2>
+                    <span class="text-xs text-stone-400" x-text="job.preparation"></span>
                 </div>
-                <a :href="`/certs?industry=${encodeURIComponent(job.industry)}`" class="mt-auto pt-5 text-sm font-medium text-stone-500 hover:text-zinc-800 transition">Find certs for this &rarr;</a>
+                <p class="text-xs text-stone-400" x-text="job.reason"></p>
+                <p class="mt-2 text-sm text-stone-500" x-text="job.description"></p>
+                <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                    <a :href="job.url" target="_blank" rel="noopener" class="underline underline-offset-4 decoration-stone-300 hover:decoration-olive-700">Pay, outlook and details</a>
+                    <a x-show="job.certs" :href="`/certs?job=${job.code}`" class="text-stone-500 underline underline-offset-4 decoration-stone-300 hover:text-olive-700">Certs for this job</a>
+                </div>
             </article>
         </template>
     </section>
+
+    <p class="mt-10 text-xs text-stone-400">
+        Job data comes from the <a href="https://www.onetcenter.org/database.html" class="underline">O*NET 31.0 Database</a> by the U.S. Department of Labor,
+        Employment and Training Administration, and the O*NET military crosswalk from the Defense Manpower Data Center, used under
+        <a href="https://creativecommons.org/licenses/by/4.0/" class="underline">CC BY 4.0</a>. We filtered it and mapped combat and tactical jobs to related civilian ones.
+    </p>
 </div>
 
 <script>
-function jobs(saved) {
+function jobs() {
   return {
-    profile: { branch: '', role: '', years: '', rank: '', leadership: '', interests: '', ...saved },
+    branch: '',
+    query: '',
+    options: [],
+    picked: null,
+    searched: false,
+    led: false,
     results: [],
     loading: false,
     error: '',
+    clear() {
+      this.query = ''
+      this.options = []
+      this.picked = null
+      this.searched = false
+    },
+    async lookup() {
+      this.picked = null
+      if (!this.query.trim()) {
+        this.options = []
+        this.searched = false
+        return
+      }
+      const params = new URLSearchParams({ branch: this.branch, q: this.query })
+      const res = await fetch(`/api/military?${params}`)
+      this.options = await res.json()
+      this.searched = true
+    },
+    choose(option) {
+      this.picked = option
+      this.query = `${option.code} ${option.title}`
+      this.options = []
+    },
     async submit() {
+      if (!this.picked) {
+        this.error = 'Pick your job from the list first.'
+        return
+      }
       this.loading = true
       this.error = ''
       try {
-        const data = await post('/api/jobs', this.profile)
-        this.results = data.jobs || []
+        const data = await post('/api/jobs', { branch: this.branch, id: this.picked.id, led: this.led })
+        this.results = data.jobs
       } catch (e) {
         this.error = e.message
       } finally {

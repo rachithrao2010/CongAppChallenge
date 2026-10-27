@@ -3,15 +3,33 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}{% endblock %} · Next Chapter</title>
+        <title>{% block title %}{% endblock %} · VetForward</title>
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            // sampled from the logo. olive is the main accent, navy for headings, red only for errors
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            olive: { 50: '#f4f5ee', 100: '#e6e9d8', 600: '#5b6839', 700: '#49532e' },
+                            navy: { 900: '#052232' },
+                            flag: { 600: '#9f1b17' },
+                        },
+                    },
+                },
+            }
+        </script>
         <script src="{{ url_for('static', filename='app.js') }}"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     </head>
     <body class="dot-grid text-zinc-800 antialiased min-h-screen">
-            {% set paths = ['/', '/resume', '/jobs', '/certs', '/roadmap'] %}
+            {% set paths = ['/', '/resume', '/jobs', '/certs'] %}
             {% set active = paths.index(request.path) if request.path in paths else 0 %}
+            <a href="/" class="absolute left-6 top-[43px] hidden md:flex items-center h-14 print:hidden">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VetForward" class="h-14 w-auto">
+            </a>
             <div class="mt-[43px] flex justify-center print:hidden">
                 <nav
     x-ref="nav"
@@ -24,7 +42,7 @@
       squish: 1,
       lastTime: null,
       settleTimer: null,
-      tabs: [{label:'Home', href:'/'}, {label:'Resume', href:'/resume'}, {label:'Jobs', href:'/jobs'}, {label:'Certs', href:'/certs'}, {label:'Roadmap', href:'/roadmap'}],
+      tabs: [{label:'Home', href:'/'}, {label:'Resume', href:'/resume'}, {label:'Jobs', href:'/jobs'}, {label:'Certs', href:'/certs'}],
       tabWidth: 112,
       padding: 6,
       track(e) {
@@ -64,7 +82,7 @@
     class="relative inline-flex items-center bg-white rounded-full p-1.5 shadow-sm border border-stone-200"
   >
     <div
-      class="absolute top-1.5 left-1.5 h-11 bg-zinc-800 rounded-full"
+      class="absolute top-1.5 left-1.5 h-11 bg-olive-700 rounded-full"
       style="width: 112px; translate: {{ active * 112 }}px 0"
       :style="`width: ${tabWidth}px; translate: ${bubbleX}px 0; scale: ${1 + stretch} ${squish}; transition: translate ${hovering ? '150ms ease-out' : '500ms cubic-bezier(0.34,1.56,0.64,1)'}, scale 180ms cubic-bezier(0.34,1.56,0.64,1)`"
     ></div>
@@ -92,9 +110,6 @@
           <circle cx="12" cy="9" r="6" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.5L8 21l4-2 4 2-1-6.5" />
         </svg>
-        <svg x-show="tab.label === 'Roadmap'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" />
-        </svg>
         <span x-text="tab.label"></span>
       </a>
     </template>
@@ -102,9 +117,6 @@
             </div>
 
             <main class="{% block width %}max-w-3xl{% endblock %} mx-auto px-4 pt-14 pb-24">
-                {% if demo_mode %}
-                <p class="mb-8 text-center text-xs text-stone-400 print:hidden">Demo mode: results are samples until a Gemini API key is added.</p>
-                {% endif %}
                 {% block content %}{% endblock %}
             </main>
 

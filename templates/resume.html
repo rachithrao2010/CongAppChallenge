@@ -2,11 +2,10 @@
 {% block title %}Resume{% endblock %}
 {% block content %}
 <div x-data="resume()">
-    <p class="text-xs font-mono text-stone-400">01 / Resume</p>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Translate your resume</h1>
-    <p class="mt-2 text-stone-500">Paste your resume or upload a PDF. We'll swap the military terms for language civilian employers understand.</p>
+    <h1 class="text-3xl font-semibold tracking-tight text-navy-900">Resume translator</h1>
+    <p class="mt-2 text-stone-500">Paste your resume or upload a PDF. Military terms get swapped out for wording a civilian employer will understand.</p>
 
-    <form @submit.prevent="submit()" class="mt-8 bg-white border border-stone-200 rounded-2xl shadow-sm p-6">
+    <form @submit.prevent="submit()" class="mt-8 bg-white border border-stone-200 rounded-xl p-6">
         <div class="inline-flex bg-stone-100 rounded-full p-1 text-sm font-medium">
             <button type="button" @click="mode = 'paste'" class="px-4 h-8 rounded-full transition" :class="mode === 'paste' ? 'bg-white shadow-sm' : 'text-stone-500'">Paste text</button>
             <button type="button" @click="mode = 'upload'" class="px-4 h-8 rounded-full transition" :class="mode === 'upload' ? 'bg-white shadow-sm' : 'text-stone-500'">Upload PDF</button>
@@ -21,7 +20,7 @@
         </label>
         <embed x-show="mode === 'upload' && preview" x-cloak :src="preview" type="application/pdf" class="mt-4 w-full h-96 rounded-xl border border-stone-200">
 
-        <p class="mt-3 text-xs text-stone-400">We take out names, dates, locations, contact info and ID numbers before anything goes to the AI, then put them back. Leave out anything else you'd rather keep private.</p>
+        <p class="mt-3 text-xs text-stone-400">Names, dates, locations and contact info are removed before your resume is sent to the AI, and added back afterward.</p>
 
         <label class="block mt-4">
             <span class="text-sm font-medium">Job you're aiming for <span class="text-stone-400 font-normal">(optional)</span></span>
@@ -29,22 +28,27 @@
         </label>
 
         <div class="mt-6 flex items-center gap-4">
-            <button class="rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700 disabled:opacity-50" :disabled="loading">
+            <button class="rounded-full bg-olive-700 text-white text-sm font-medium px-6 h-11 transition hover:bg-olive-600 disabled:opacity-50" :disabled="loading">
                 <span x-text="loading ? 'Translating...' : 'Translate'"></span>
             </button>
-            <p x-show="error" x-text="error" class="text-sm text-red-600"></p>
+            <p x-show="error" x-text="error" class="text-sm text-flag-600"></p>
         </div>
     </form>
 
-    <section x-show="result" x-cloak class="mt-6 bg-white border border-stone-200 rounded-2xl shadow-sm p-6">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold">Your civilian resume</h2>
-            <button @click="copy()" class="rounded-full border border-stone-200 text-sm font-medium px-4 h-9 hover:border-stone-300 transition" x-text="copied ? 'Copied' : 'Copy'"></button>
+    <section x-show="result" x-cloak class="mt-6 bg-white border border-stone-200 rounded-xl shadow-sm p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="font-semibold text-navy-900">Translated resume</h2>
+            <div class="flex flex-wrap gap-2">
+                <button @click="copy()" class="rounded-full border border-stone-200 text-sm font-medium px-4 h-9 hover:border-olive-700 transition" x-text="copied ? 'Copied' : 'Copy'"></button>
+                <button @click="download('docx')" :disabled="saving" class="rounded-full border border-stone-200 text-sm font-medium px-4 h-9 hover:border-olive-700 transition disabled:opacity-50">Download Word</button>
+                <button @click="download('pdf')" :disabled="saving" class="rounded-full bg-olive-700 text-white text-sm font-medium px-4 h-9 hover:bg-olive-600 transition disabled:opacity-50">Download PDF</button>
+            </div>
         </div>
+        <p x-show="saveError" x-text="saveError" class="mt-2 text-sm text-flag-600"></p>
         <pre x-text="result" class="mt-4 whitespace-pre-wrap font-sans text-sm leading-relaxed"></pre>
 
         <div x-show="changes.length" class="mt-6 pt-5 border-t border-stone-100">
-            <h3 class="text-sm font-medium text-stone-500">What we changed</h3>
+            <h3 class="text-sm font-medium text-stone-500">Changes</h3>
             <ul class="mt-2 space-y-1 text-sm text-stone-500">
                 <template x-for="change in changes">
                     <li x-text="change"></li>
@@ -67,6 +71,8 @@ function resume() {
     loading: false,
     error: '',
     copied: false,
+    saving: false,
+    saveError: '',
     pick(e) {
       this.file = e.target.files[0] || null
       this.error = ''
@@ -101,6 +107,30 @@ function resume() {
       await navigator.clipboard.writeText(this.result)
       this.copied = true
       setTimeout(() => { this.copied = false }, 1500)
+    },
+    async download(format) {
+      this.saving = true
+      this.saveError = ''
+      try {
+        const res = await fetch('/api/resume/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: this.result, format }),
+        })
+        if (!res.ok) {
+          throw new Error((await res.json().catch(() => ({}))).error || "Couldn't make the file. Try again.")
+        }
+        const name = (res.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)"?/)
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(await res.blob())
+        link.download = name ? name[1] : `Resume.${format}`
+        link.click()
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+      } catch (e) {
+        this.saveError = e.message
+      } finally {
+        this.saving = false
+      }
     }
   }
 }

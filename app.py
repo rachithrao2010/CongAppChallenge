@@ -1,36 +1,22 @@
-import json
+import io
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request, session
+from flask import Flask, jsonify, render_template, request, send_file
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
 import ai
-import demo
+import careers
+import export
 import prompts
 import redact
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 # Vercel serves public/ from its CDN, Flask only uses this locally
 app = Flask(__name__, static_folder='public/static')
-app.secret_key = os.environ.get('SECRET_KEY', 'dev')
 
-PROFILE_FIELDS = ['branch', 'role', 'years', 'rank', 'leadership', 'interests']
-
-
-def read_profile(data):
-    return {field: str(data.get(field, '')).strip() for field in PROFILE_FIELDS}
-
-
-def scrubbed(profile):
-    return {field: redact.scrub(value)[0] for field, value in (profile or {}).items()}
-
-
-@app.context_processor
-def inject_demo():
-    return {'demo_mode': not os.environ.get('GEMINI_API_KEY')}
 
 @app.errorhandler(ai.AIError)
 def ai_error(e):
@@ -46,22 +32,22 @@ def resume():
 
 @app.route('/jobs')
 def jobs():
-    return render_template('jobs.html', profile=session.get('profile', {}))
+    return render_template('jobs.html', branches=list(careers.MILITARY))
 
 @app.route('/certs')
 def certs():
-    industry = request.args.get('industry', session.get('industry', ''))
-    return render_template('certs.html', industry=industry, profile=session.get('profile'))
-
-@app.route('/roadmap')
-def roadmap():
+    industry = request.args.get('industry', '')
+    job = careers.OCCUPATIONS.get(request.args.get('job', ''))
+    if job:
+        certs = careers.certs_for(request.args['job'])
+    else:
+        certs = careers.CERTS.get(industry, [])
     return render_template(
-        'roadmap.html',
-        profile=session.get('profile', {}),
-        jobs=session.get('jobs', []),
-        industry=session.get('industry', ''),
-        certs=session.get('certs', []),
-        resume_done=session.get('resume_done', False),
+        'certs.html',
+        industries=list(careers.CERTS),
+        industry=industry,
+        job=job,
+        certs=certs,
     )
 
 @app.route('/api/resume', methods=['POST'])
@@ -73,7 +59,7 @@ def convert_resume():
             pages = PdfReader(upload).pages
         except PdfReadError:
             return jsonify(error="That PDF couldn't be opened."), 400
-        text = '\n'.join(page.extract_text() or '' for page in pages).strip()
+        text = export.tidy('\n'.join(page.extract_text() or '' for page in pages)).strip()
     if not text:
         return jsonify(error='Paste your resume or upload a PDF with selectable text.'), 400
 
@@ -85,54 +71,37 @@ def convert_resume():
 
     target = redact.scrub(request.form.get('target', '').strip())[0]
     prompt = f'Target role: {target or "not specified"}\n\nResume:\n{body}'
-    result = dict(ai.ask(prompts.RESUME, prompt, demo.RESUME))
+    result = dict(ai.ask(prompts.RESUME, prompt))
     result['resume'] = '\n\n'.join(filter(None, [header, redact.restore(result.get('resume', ''), hidden), references]))
-    session['resume_done'] = True
     return jsonify(result)
+
+@app.route('/api/resume/download', methods=['POST'])
+def download_resume():
+    data = request.get_json(silent=True) or {}
+    text = data.get('text', '').strip()
+    kind = data.get('format')
+    if not text or kind not in ('docx', 'pdf'):
+        return jsonify(error='Nothing to download yet.'), 400
+
+    if kind == 'docx':
+        body, mimetype = export.to_docx(text), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    else:
+        body, mimetype = export.to_pdf(text), 'application/pdf'
+    return send_file(io.BytesIO(body), mimetype=mimetype, as_attachment=True, download_name=export.filename(text, kind))
+
+@app.route('/api/military')
+def military_jobs():
+    return jsonify(careers.search(request.args.get('branch', ''), request.args.get('q', '')))
 
 @app.route('/api/jobs', methods=['POST'])
 def match_jobs():
-    profile = read_profile(request.get_json())
-    if not profile['branch'] or not profile['role']:
-        return jsonify(error='Tell us your branch and what you did.'), 400
+    data = request.get_json() or {}
+    branch = data.get('branch')
+    index = data.get('id')
+    if branch not in careers.MILITARY or not isinstance(index, int) or not 0 <= index < len(careers.MILITARY[branch]):
+        return jsonify(error='Pick your branch and job from the list first.'), 400
 
-    result = ai.ask(prompts.JOBS, json.dumps(scrubbed(profile), indent=2), demo.JOBS)
-    session['profile'] = profile
-    session['jobs'] = [job['title'] for job in result.get('jobs', [])]
-    return jsonify(result)
-
-@app.route('/api/certs', methods=['POST'])
-def find_certs():
-    data = request.get_json()
-    industry = str(data.get('industry', '')).strip()
-    if not industry:
-        return jsonify(error='Pick an industry first.'), 400
-
-    prompt = json.dumps({
-        'industry': industry,
-        'target_job': redact.scrub(str(data.get('target', '')).strip())[0],
-        'profile': scrubbed(session.get('profile')),
-    }, indent=2)
-    result = ai.ask(prompts.CERTS, prompt, demo.CERTS)
-    session['industry'] = industry
-    session['certs'] = [cert['name'] for cert in result.get('certs', [])]
-    return jsonify(result)
-
-@app.route('/api/roadmap', methods=['POST'])
-def build_roadmap():
-    profile = read_profile(request.get_json())
-    if not profile['branch'] or not profile['role']:
-        return jsonify(error='Tell us your branch and what you did.'), 400
-
-    session['profile'] = profile
-    prompt = json.dumps({
-        'profile': scrubbed(profile),
-        'interested_jobs': session.get('jobs', []),
-        'target_industry': session.get('industry', ''),
-        'planned_certs': session.get('certs', []),
-        'resume_converted': session.get('resume_done', False),
-    }, indent=2)
-    return jsonify(ai.ask(prompts.ROADMAP, prompt, demo.ROADMAP))
+    return jsonify(jobs=careers.match(branch, index, bool(data.get('led'))))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

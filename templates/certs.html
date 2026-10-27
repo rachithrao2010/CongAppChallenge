@@ -1,89 +1,56 @@
 {% extends 'base.html' %}
 {% block title %}Certs{% endblock %}
 {% block content %}
-<div x-data='certs({{ industry | tojson }})'>
-    <p class="text-xs font-mono text-stone-400">03 / Certs</p>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Get certified</h1>
-    <p class="mt-2 text-stone-500">Pick the industry you want to get into and we'll lay out which certifications to go after, in order.</p>
+<h1 class="text-3xl font-semibold tracking-tight text-navy-900">Certification finder</h1>
+<p class="mt-2 text-stone-500">Pick an industry to see which certifications are worth getting, starting with the entry-level ones.</p>
 
-    <form @submit.prevent="submit()" class="mt-8 bg-white border border-stone-200 rounded-2xl shadow-sm p-6">
-        <div class="grid sm:grid-cols-2 gap-4">
-            <label class="block">
-                <span class="text-sm font-medium">Industry</span>
-                <input x-model="industry" list="industries" class="field mt-1.5" placeholder="e.g. IT & Cybersecurity">
-                <datalist id="industries">
-                    <option>IT & Cybersecurity</option>
-                    <option>Project Management</option>
-                    <option>Logistics & Supply Chain</option>
-                    <option>Healthcare</option>
-                    <option>Skilled Trades</option>
-                    <option>Law Enforcement & Security</option>
-                    <option>Aviation</option>
-                    <option>Energy & Utilities</option>
-                    <option>Finance</option>
-                </datalist>
-            </label>
-            <label class="block">
-                <span class="text-sm font-medium">Specific job <span class="text-stone-400 font-normal">(optional)</span></span>
-                <input x-model="target" class="field mt-1.5" placeholder="e.g. SOC Analyst">
-            </label>
+<form method="get" class="mt-8 bg-white border border-stone-200 rounded-xl p-6 flex flex-col sm:flex-row sm:items-end gap-4">
+    <label class="block flex-1">
+        <span class="text-sm font-medium">Industry</span>
+        <select name="industry" class="field mt-1.5" onchange="this.form.submit()">
+            <option value="">Choose one</option>
+            {% for name in industries %}
+            <option {{ 'selected' if name == industry }}>{{ name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <noscript><button class="rounded-full bg-olive-700 text-white text-sm font-medium px-6 h-11">Show certs</button></noscript>
+</form>
+
+{% if job %}
+<p class="mt-8 text-stone-500">Certs that fit <span class="font-medium text-navy-900">{{ job.title }}</span>:</p>
+{% if not certs %}
+<p class="mt-2 text-sm text-stone-500">We don't have any certs listed for this job yet. Try the COOL site below.</p>
+{% endif %}
+{% endif %}
+
+{% if certs %}
+<section class="{{ 'mt-3' if job else 'mt-6' }} space-y-3">
+    {% for cert in certs %}
+    <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-6 flex gap-5">
+        <span class="text-sm text-stone-400 pt-0.5">{{ loop.index }}.</span>
+        <div class="flex-1">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 class="text-lg font-semibold">{{ cert.name }}</h2>
+                <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">{{ cert.level }}</span>
+            </div>
+            <p class="text-sm text-stone-400">{{ cert.issuer }}{% if job %} · {{ cert.industry }}{% endif %}</p>
+            <p class="mt-2 text-sm text-stone-500">{{ cert.about }}</p>
+            <a href="{{ cert.url }}" target="_blank" rel="noopener" class="mt-3 inline-block text-sm underline underline-offset-4 decoration-stone-300 hover:decoration-olive-700">Official page</a>
         </div>
+    </article>
+    {% endfor %}
+</section>
+{% endif %}
 
-        {% if profile %}
-        <p class="mt-4 text-xs text-stone-400">Using your profile from Jobs ({{ profile.branch }}, {{ profile.role }}) to skip what you already know.</p>
-        {% endif %}
-
-        <div class="mt-6 flex items-center gap-4">
-            <button class="rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700 disabled:opacity-50" :disabled="loading">
-                <span x-text="loading ? 'Searching...' : 'Find certs'"></span>
-            </button>
-            <p x-show="error" x-text="error" class="text-sm text-red-600"></p>
-        </div>
-    </form>
-
-    <section x-show="results.length" x-cloak class="mt-6 space-y-3">
-        <template x-for="(cert, i) in results" :key="cert.name">
-            <article class="bg-white border border-stone-200 rounded-2xl shadow-sm p-6 flex gap-5">
-                <span class="text-xs font-mono text-stone-400 pt-1" x-text="String(i + 1).padStart(2, '0')"></span>
-                <div class="flex-1">
-                    <div class="flex flex-wrap items-baseline justify-between gap-2">
-                        <h2 class="text-lg font-semibold" x-text="cert.name"></h2>
-                        <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1" x-text="cert.level"></span>
-                    </div>
-                    <p class="text-sm text-stone-400" x-text="cert.issuer"></p>
-                    <p class="mt-2 text-sm text-stone-500" x-text="cert.why"></p>
-                    <div class="mt-3 flex gap-5 text-xs text-stone-500">
-                        <span x-text="`Prep: ${cert.time}`"></span>
-                        <span x-text="`Exam: ${cert.cost}`"></span>
-                    </div>
-                </div>
-            </article>
-        </template>
-        <p class="text-xs text-stone-400 pt-2">Costs change often, so check with the issuer. The GI Bill can cover many exam fees.</p>
-    </section>
+<div class="mt-8 space-y-2 text-sm text-stone-500">
+    <p>
+        The GI Bill can pay for license and certification test fees.
+        <a href="https://www.va.gov/education/about-gi-bill-benefits/how-to-use-benefits/licensing-and-certification-tests/" target="_blank" rel="noopener" class="underline underline-offset-4 decoration-stone-300 hover:text-olive-700">How it works</a>
+    </p>
+    <p>
+        Each branch also has a COOL site that lists certs tied to your exact job code. If you're still serving, your branch may pay for some of them.
+        <a href="https://www.cool.osd.mil/" target="_blank" rel="noopener" class="underline underline-offset-4 decoration-stone-300 hover:text-olive-700">Find yours</a>
+    </p>
 </div>
-
-<script>
-function certs(industry) {
-  return {
-    industry: industry,
-    target: '',
-    results: [],
-    loading: false,
-    error: '',
-    async submit() {
-      this.loading = true
-      this.error = ''
-      try {
-        const data = await post('/api/certs', { industry: this.industry, target: this.target })
-        this.results = data.certs || []
-      } catch (e) {
-        this.error = e.message
-      } finally {
-        this.loading = false
-      }
-    }
-  }
-}
-</script>
 {% endblock %}

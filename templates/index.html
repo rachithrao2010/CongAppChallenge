@@ -3,128 +3,70 @@
 {% block width %}max-w-5xl{% endblock %}
 {% block content %}
 <section class="hero text-center py-10">
-    <p class="text-xs font-mono text-stone-400">Chapter two</p>
-    <h1 class="mt-3 text-4xl sm:text-6xl font-semibold tracking-tight">Your next chapter<br>starts here.</h1>
-    <p class="mt-5 text-stone-500 max-w-xl mx-auto">
-        You spent years building skills the civilian world needs. Next Chapter helps you put them into words,
-        find where they fit, and plan the road from service to whatever comes next.
+    <h1 class="text-5xl sm:text-7xl font-semibold tracking-tight"><span class="text-navy-900">Vet</span><span class="text-olive-700">Forward</span></h1>
+    <p class="mt-4 text-xl sm:text-2xl text-stone-500">Your next chapter starts here.</p>
+    <p class="mt-6 text-stone-500 max-w-lg mx-auto">
+        Leaving the military is a big change, and a lot of what you did doesn't come across well on paper.
+        VetForward is a set of free tools to help with that.
     </p>
-    <div class="mt-8 flex justify-center gap-3">
-        <a href="/resume" class="inline-flex items-center rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700">Get started</a>
-        <a href="#resume" class="inline-flex items-center rounded-full border border-stone-200 bg-white text-sm font-medium px-6 h-11 transition hover:border-stone-300">See how it works</a>
-    </div>
+    <a href="/resume" class="mt-8 inline-flex items-center rounded-full bg-olive-700 text-white text-sm font-medium px-6 h-11 transition hover:bg-olive-600">Get started</a>
 </section>
 
-<section id="resume" class="feature">
-    <div class="feature-text">
-        <p class="text-xs font-mono text-stone-400">01 / Resume</p>
-        <h2 class="mt-2 text-3xl font-semibold tracking-tight">Say what you did in words they get.</h2>
+<section class="feature">
+    <div>
+        <h2 class="text-2xl font-semibold text-navy-900">Resume translator</h2>
         <p class="mt-3 text-stone-500">
-            NCOIC, MOS, property book. Hiring managers skim right past them. Paste your resume and we'll turn the
-            jargon into plain language without losing what makes your experience stand out.
+            Military resumes are full of acronyms and titles that civilian hiring managers don't recognize.
+            Paste yours in or upload a PDF and it gets rewritten in plain language. Your numbers and
+            accomplishments stay the same.
         </p>
-        <ul class="mt-5 space-y-2 text-sm">
-            <li>Paste text or upload a PDF</li>
-            <li>Keeps your real numbers and results</li>
-            <li>Tailor it to the job you want</li>
-        </ul>
-        <a href="/resume" class="mt-6 inline-block text-sm font-medium hover:underline">Translate my resume &rarr;</a>
+        <a href="/resume" class="mt-4 inline-block text-sm font-medium underline underline-offset-4 decoration-stone-300 hover:decoration-olive-700">Translate my resume</a>
     </div>
     <div class="pinned -rotate-1">
-        <p class="text-xs font-mono text-stone-400">Before</p>
+        <p class="text-xs text-stone-400">Before</p>
         <p class="mt-1 text-sm text-stone-400 line-through">NCOIC of 12 Soldiers, maintained 100% accountability of $2.3M in MTOE equipment</p>
-        <p class="mt-5 text-xs font-mono text-stone-400">After</p>
+        <p class="mt-5 text-xs text-stone-400">After</p>
         <p class="mt-1 text-sm">Supervised a team of 12 and managed $2.3M in vehicles and equipment with zero losses.</p>
     </div>
 </section>
 
 <section class="feature">
-    <div class="feature-text">
-        <p class="text-xs font-mono text-stone-400">02 / Jobs</p>
-        <h2 class="mt-2 text-3xl font-semibold tracking-tight">Find where your skills already fit.</h2>
+    <div>
+        <h2 class="text-2xl font-semibold text-navy-900">Job matcher</h2>
         <p class="mt-3 text-stone-500">
-            Tell us your branch, what you did and who you led. We'll point you to careers where your service
-            gives you a head start, including a few you might not have thought of.
+            Look up your job code, like 11B or HM, and see the civilian jobs it lines up with. The matches come from
+            the Department of Labor's official military crosswalk, and each one links to real pay and outlook data.
         </p>
-        <ul class="mt-5 space-y-2 text-sm">
-            <li>Works for every branch and role</li>
-            <li>Accounts for rank and leadership</li>
-            <li>Shows which skills carry over</li>
-        </ul>
-        <a href="/jobs" class="mt-6 inline-block text-sm font-medium hover:underline">Match me with jobs &rarr;</a>
+        <a href="/jobs" class="mt-4 inline-block text-sm font-medium underline underline-offset-4 decoration-stone-300 hover:decoration-olive-700">Find jobs</a>
     </div>
-    <div class="pinned rotate-1">
-        <p class="text-xs font-mono text-stone-400">Logistics & Supply Chain</p>
-        <p class="mt-2 text-lg font-semibold">Operations Manager</p>
-        <p class="mt-1 text-sm text-stone-500">You already ran people, equipment and schedules under pressure.</p>
-        <div class="mt-4 flex flex-wrap gap-1.5">
-            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">Team leadership</span>
-            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">Planning</span>
-            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">Accountability</span>
-        </div>
+    <div class="pinned rotate-2">
+        <p class="text-xs text-stone-400">Army 11B, Infantryman</p>
+        <ul class="mt-3 space-y-2 text-sm font-medium">
+            <li>Police and Sheriff's Patrol Officers</li>
+            <li>Firefighters</li>
+            <li>Correctional Officers and Jailers</li>
+            <li>Detectives and Criminal Investigators</li>
+        </ul>
     </div>
 </section>
 
 <section class="feature">
-    <div class="feature-text">
-        <p class="text-xs font-mono text-stone-400">03 / Certs</p>
-        <h2 class="mt-2 text-3xl font-semibold tracking-tight">Get the paper that opens the door.</h2>
+    <div>
+        <h2 class="text-2xl font-semibold text-navy-900">Certification finder</h2>
         <p class="mt-3 text-stone-500">
-            Some industries screen for certifications before they ever read a resume. Pick where you want to work
-            and we'll lay out which ones to get, in the order that makes sense.
+            A lot of industries want to see certifications before they'll look at your experience. Pick the field
+            you're interested in to see which certs to start with and where to sign up for each one.
         </p>
-        <ul class="mt-5 space-y-2 text-sm">
-            <li>From entry level to advanced</li>
-            <li>Rough prep time and exam cost</li>
-            <li>Skips what your service already covers</li>
-        </ul>
-        <a href="/certs" class="mt-6 inline-block text-sm font-medium hover:underline">Find certifications &rarr;</a>
+        <a href="/certs" class="mt-4 inline-block text-sm font-medium underline underline-offset-4 decoration-stone-300 hover:decoration-olive-700">Look up certs</a>
     </div>
     <div class="pinned -rotate-1 space-y-3">
-        {% for name, level in [('CompTIA A+', 'Entry'), ('CompTIA Security+', 'Intermediate'), ('CISSP', 'Advanced')] %}
+        {% for name, level in [('CompTIA A+', 'Entry'), ('CompTIA Security+', 'Entry'), ('CompTIA CySA+', 'Intermediate'), ('CISSP', 'Advanced')] %}
         <div class="flex items-center gap-4">
-            <span class="text-xs font-mono text-stone-400">0{{ loop.index }}</span>
+            <span class="text-xs text-stone-400">{{ loop.index }}.</span>
             <span class="flex-1 text-sm font-medium">{{ name }}</span>
-            <span class="text-xs rounded-full bg-stone-100 px-2.5 py-1">{{ level }}</span>
+            <span class="text-xs text-stone-500">{{ level }}</span>
         </div>
         {% endfor %}
     </div>
-</section>
-
-<section class="feature">
-    <div class="feature-text">
-        <p class="text-xs font-mono text-stone-400">04 / Roadmap</p>
-        <h2 class="mt-2 text-3xl font-semibold tracking-tight">See the whole road ahead.</h2>
-        <p class="mt-3 text-stone-500">
-            We take everything you've told us and build a step-by-step plan, from your last months in uniform to
-            feeling settled. Careers, benefits, money and community, all in one place.
-        </p>
-        <ul class="mt-5 space-y-2 text-sm">
-            <li>Built from your resume, jobs and certs</li>
-            <li>Check off steps as you go</li>
-            <li>Print it and pin it up</li>
-        </ul>
-        <a href="/roadmap" class="mt-6 inline-block text-sm font-medium hover:underline">Build my roadmap &rarr;</a>
-    </div>
-    <div class="pinned rotate-1">
-        {% for time, title in [('6-12 months before', 'Get ready to separate'), ('0-2 months', 'Translate your experience'), ('2-6 months', 'Build credentials')] %}
-        <div class="flex gap-4">
-            <div class="flex flex-col items-center">
-                <span class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-mono {{ 'bg-zinc-800 text-white' if loop.first else 'border border-stone-200 text-stone-500' }}">0{{ loop.index }}</span>
-                {% if not loop.last %}<span class="flex-1 my-1 border-l-2 border-dashed border-stone-300"></span>{% endif %}
-            </div>
-            <div class="{{ '' if loop.last else 'pb-4' }}">
-                <p class="text-xs font-mono text-stone-400">{{ time }}</p>
-                <p class="text-sm font-medium">{{ title }}</p>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-
-<section class="mt-24 text-center">
-    <h2 class="text-3xl font-semibold tracking-tight">Ready when you are.</h2>
-    <p class="mt-3 text-stone-500">Start with your resume. Everything else builds from there.</p>
-    <a href="/resume" class="mt-6 inline-flex items-center rounded-full bg-zinc-800 text-white text-sm font-medium px-6 h-11 transition hover:bg-zinc-700">Get started</a>
 </section>
 {% endblock %}
