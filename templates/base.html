@@ -27,7 +27,7 @@
     <body class="dot-grid text-zinc-800 antialiased min-h-screen">
             {% set paths = ['/', '/resume', '/jobs', '/certs'] %}
             {% set active = paths.index(request.path) if request.path in paths else 0 %}
-            <a href="/" class="absolute left-6 top-[43px] hidden md:flex items-center h-14 print:hidden">
+            <a href="/" class="absolute left-6 top-[43px] hidden lg:flex items-center h-14 print:hidden">
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VetForward" class="h-14 w-auto">
             </a>
             <div class="mt-[43px] flex justify-center print:hidden">
@@ -37,13 +37,13 @@
       active: {{ active }},
       hovering: false,
       hoveredIndex: null,
-      bubbleX: {{ active * 112 }},
+      bubbleX: {{ active * 136 }},
       stretch: 0,
       squish: 1,
       lastTime: null,
       settleTimer: null,
-      tabs: [{label:'Home', href:'/'}, {label:'Resume', href:'/resume'}, {label:'Jobs', href:'/jobs'}, {label:'Certs', href:'/certs'}],
-      tabWidth: 112,
+      tabs: [{label:'Home', href:'/'}, {label:'Resume', href:'/resume'}, {label:'Jobs', href:'/jobs'}, {label:'Certifications', href:'/certs'}],
+      tabWidth: 136,
       padding: 6,
       track(e) {
         const rect = this.$refs.nav.getBoundingClientRect()
@@ -83,7 +83,7 @@
   >
     <div
       class="absolute top-1.5 left-1.5 h-11 bg-olive-700 rounded-full"
-      style="width: 112px; translate: {{ active * 112 }}px 0"
+      style="width: 136px; translate: {{ active * 136 }}px 0"
       :style="`width: ${tabWidth}px; translate: ${bubbleX}px 0; scale: ${1 + stretch} ${squish}; transition: translate ${hovering ? '150ms ease-out' : '500ms cubic-bezier(0.34,1.56,0.64,1)'}, scale 180ms cubic-bezier(0.34,1.56,0.64,1)`"
     ></div>
 
@@ -106,7 +106,7 @@
           <rect x="3" y="7" width="18" height="13" rx="2" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 13h18" />
         </svg>
-        <svg x-show="tab.label === 'Certs'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg x-show="tab.label === 'Certifications'" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="9" r="6" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.5L8 21l4-2 4 2-1-6.5" />
         </svg>

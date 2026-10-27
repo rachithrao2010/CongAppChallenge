@@ -14,7 +14,6 @@ FALLBACK_MODEL = 'gemini-flash-lite-latest'
 
 
 def complete(system, prompt):
-    # the sdk keeps retrying 503s with backoff, so cap it and fall back instead
     client = genai.Client(
         api_key=os.environ['GEMINI_API_KEY'],
         http_options=types.HttpOptions(timeout=60000, retry_options=types.HttpRetryOptions(attempts=1)),

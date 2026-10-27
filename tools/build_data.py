@@ -37,6 +37,15 @@ MILITARY_ONLY = {
 }
 
 
+def by_branch(military):
+    # one job per line so the file can be read and diffed
+    branches = []
+    for branch, jobs in military.items():
+        rows = ',\n'.join('    ' + json.dumps(job, ensure_ascii=False) for job in jobs)
+        branches.append(f'  {json.dumps(branch)}: [\n{rows}\n  ]')
+    return '{\n' + ',\n'.join(branches) + '\n}\n'
+
+
 def read(path):
     with open(path, encoding='utf-8-sig', errors='replace', newline='') as f:
         return list(csv.DictReader(f))
@@ -79,7 +88,7 @@ def main(src):
             military.setdefault(BRANCHES[r['SVC']], []).append([r['MOC'], r['MOC_TITLE'], r['MPC'], codes])
 
     (out / 'occupations.json').write_text(json.dumps(occupations, separators=(',', ':')), encoding='utf-8')
-    (out / 'military.json').write_text(json.dumps(military, separators=(',', ':')), encoding='utf-8')
+    (out / 'military.json').write_text(by_branch(military), encoding='utf-8')
     print(f'{len(occupations)} occupations, {sum(len(v) for v in military.values())} military jobs')
 
 

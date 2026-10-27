@@ -33,6 +33,13 @@
             </button>
             <p x-show="error" x-text="error" class="text-sm text-flag-600"></p>
         </div>
+
+        <div x-show="progress > 0" x-cloak class="mt-5">
+            <p class="text-xs text-stone-500" x-text="stage()"></p>
+            <div class="mt-1.5 h-2 rounded-full bg-stone-100 overflow-hidden">
+                <div class="h-full rounded-full bg-olive-700 transition-[width] duration-300 ease-out" :style="`width: ${progress}%`"></div>
+            </div>
+        </div>
     </form>
 
     <section x-show="result" x-cloak class="mt-6 bg-white border border-stone-200 rounded-xl shadow-sm p-6">
@@ -73,6 +80,14 @@ function resume() {
     copied: false,
     saving: false,
     saveError: '',
+    progress: 0,
+    stage() {
+      if (this.progress >= 100) return 'Done'
+      if (this.progress < 20) return 'Hiding names, places and dates'
+      if (this.progress < 55) return 'Translating military terms'
+      if (this.progress < 80) return 'Rewriting your bullets'
+      return 'Putting your details back'
+    },
     pick(e) {
       this.file = e.target.files[0] || null
       this.error = ''
@@ -93,13 +108,20 @@ function resume() {
 
       this.loading = true
       this.error = ''
+      // gemini doesn't report progress, so creep toward 90% and jump to the end when it answers
+      this.progress = 3
+      const timer = setInterval(() => { this.progress += (90 - this.progress) * 0.04 }, 200)
       try {
         const data = await post('/api/resume', form)
         this.result = data.resume
         this.changes = data.changes || []
+        this.progress = 100
+        setTimeout(() => { this.progress = 0 }, 800)
       } catch (e) {
         this.error = e.message
+        this.progress = 0
       } finally {
+        clearInterval(timer)
         this.loading = false
       }
     },

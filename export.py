@@ -2,7 +2,7 @@ import io
 import re
 
 from docx import Document
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt
@@ -19,6 +19,7 @@ PLAIN = str.maketrans({'‘': "'", '’': "'", '“': '"', '”': '"', '–': '-
 
 DASH_ONLY = re.compile(r'^[-–—]$')
 HEADING_TAIL = re.compile(r'^(.*\S)\s{2,}([A-Z][A-Z &]{3,})$')
+DATES_TAIL = re.compile(r'^(.+?)\s+\|\s+([^|]*(?:(?:19|20)\d{2}|present|current)[^|]*)$', re.IGNORECASE)
 
 
 def tidy(text):
@@ -63,17 +64,45 @@ def parse(text):
         if lines[1:]:
             blocks.append(('contact', '  |  '.join(lines[1:])))
 
-    for line in body.splitlines():
-        line = line.strip()
+    lines = [line.strip() for line in body.splitlines()]
+    for i, line in enumerate(lines):
+        after = lines[i + 1] if i + 1 < len(lines) else ''
         if not line:
-            blocks.append(('gap', ''))
+            if blocks and blocks[-1][0] not in ('heading', 'gap'):
+                blocks.append(('gap', ''))
         elif is_heading(line):
             blocks.append(('heading', line.rstrip(':').upper()))
         elif BULLET.match(line):
             blocks.append(('bullet', BULLET.sub('', line)))
+        elif blocks and blocks[-1][0] == 'bullet' and not DATES_TAIL.match(line) and not DATES_TAIL.match(after):
+            # a bullet that wrapped onto the next line
+            blocks[-1] = ('bullet', f'{blocks[-1][1]} {line}')
         else:
             blocks.append(('text', line))
-    return blocks
+    return entries(blocks)
+
+
+def entries(blocks):
+    # "Org, Place | Dates" under a title line makes a job or school entry: bold title with dates on the right
+    out = []
+    for kind, line in blocks:
+        match = DATES_TAIL.match(line) if kind == 'text' else None
+        if not match:
+            out.append((kind, line))
+            continue
+        left, dates = match.group(1), match.group(2)
+        # the title can run over a couple of lines, like a degree and its major
+        run = 0
+        while run < len(out) and out[-1 - run][0] == 'text':
+            run += 1
+        take = run if run <= 3 else 1
+        title = [out.pop()[1] for _ in range(take)][::-1]
+        if title:
+            out.append(('role', ', '.join(title), dates))
+            out.append(('org', left))
+        else:
+            out.append(('role', left, dates))
+    return [block if len(block) == 3 else (*block, '') for block in out]
 
 
 def filename(text, ext):
@@ -103,15 +132,29 @@ def to_docx(text):
     style.font.size = Pt(11)
     style.paragraph_format.space_after = Pt(2)
 
-    for kind, line in parse(text):
+    previous = None
+    for kind, line, dates in parse(text):
         if kind == 'gap':
             continue
         if kind == 'bullet':
-            p = doc.add_paragraph(line, style='List Bullet')
+            doc.add_paragraph(line, style='List Bullet')
+            previous = kind
             continue
         p = doc.add_paragraph()
         run = p.add_run(line)
-        if kind == 'name':
+        if kind == 'role':
+            run.bold = True
+            if dates:
+                p.paragraph_format.tab_stops.add_tab_stop(Inches(6.9), WD_TAB_ALIGNMENT.RIGHT)
+                p.add_run('\t' + dates)
+            if previous != 'heading':
+                p.paragraph_format.space_before = Pt(8)
+            p.paragraph_format.space_after = Pt(0)
+            p.paragraph_format.keep_with_next = True
+        elif kind == 'org':
+            run.italic = True
+            p.paragraph_format.keep_with_next = True
+        elif kind == 'name':
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run.bold = True
             run.font.size = Pt(20)
@@ -122,7 +165,9 @@ def to_docx(text):
             run.bold = True
             p.paragraph_format.space_before = Pt(12)
             p.paragraph_format.space_after = Pt(4)
+            p.paragraph_format.keep_with_next = True
             underline(p)
+        previous = kind
 
     out = io.BytesIO()
     doc.save(out)
@@ -131,20 +176,44 @@ def to_docx(text):
 
 def to_pdf(text):
     pdf = FPDF(format='letter')
-    pdf.set_margins(19, 18, 19)
-    pdf.set_auto_page_break(True, margin=18)
+    pdf.set_margins(19, 15, 19)
+    pdf.set_auto_page_break(True, margin=15)
     pdf.add_page()
     width = pdf.epw
 
-    for kind, line in parse(text):
-        line = line.translate(PLAIN).encode('latin-1', 'replace').decode('latin-1')
-        if kind == 'name':
+    previous = None
+    for kind, line, dates in parse(text):
+        line, dates = (s.translate(PLAIN).encode('latin-1', 'replace').decode('latin-1') for s in (line, dates))
+        if kind == 'role':
+            if previous not in ('heading', 'gap'):
+                pdf.ln(2.5)
+            # dates go on the right first, then the title wraps in whatever room is left
+            if pdf.get_y() > pdf.page_break_trigger - 20:
+                pdf.add_page()
+            y = pdf.get_y()
+            pdf.set_font('Helvetica', '', 10.5)
+            room = pdf.get_string_width(dates) + 4 if dates else 0
+            if dates:
+                pdf.set_xy(pdf.l_margin + width - room, y)
+                pdf.cell(room, 5.4, dates, align='R')
+                pdf.set_xy(pdf.l_margin, y)
+            pdf.set_font('Helvetica', 'B', 10.5)
+            pdf.multi_cell(width - room, 5.4, line, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        elif kind == 'org':
+            pdf.set_font('Helvetica', 'I', 10.5)
+            pdf.set_text_color(70)
+            pdf.multi_cell(width, 4.9, line, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_text_color(0)
+            pdf.ln(0.8)
+        elif kind == 'name':
             pdf.set_font('Helvetica', 'B', 20)
             pdf.multi_cell(width, 9, line, align='C', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         elif kind == 'contact':
             pdf.set_font('Helvetica', '', 9.5)
             pdf.multi_cell(width, 5, line, align='C', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         elif kind == 'heading':
+            if pdf.get_y() > pdf.page_break_trigger - 25:
+                pdf.add_page()
             pdf.ln(4)
             pdf.set_font('Helvetica', 'B', 11)
             pdf.multi_cell(width, 6, line, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -154,13 +223,14 @@ def to_pdf(text):
         elif kind == 'bullet':
             pdf.set_font('Helvetica', '', 10.5)
             pdf.set_fill_color(40)
-            pdf.circle(pdf.l_margin + 2, pdf.get_y() + 2.6, 1.1, style='F')
+            pdf.circle(pdf.l_margin + 2, pdf.get_y() + 2.45, 1, style='F')
             pdf.set_x(pdf.l_margin + 5)
-            pdf.multi_cell(width - 5, 5.2, line, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.multi_cell(width - 5, 4.9, line, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         elif kind == 'text':
             pdf.set_font('Helvetica', '', 10.5)
-            pdf.multi_cell(width, 5.2, line, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.multi_cell(width, 4.9, line, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         else:
-            pdf.ln(2)
+            pdf.ln(1.5)
+        previous = kind
 
     return bytes(pdf.output())

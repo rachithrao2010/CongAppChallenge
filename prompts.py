@@ -17,6 +17,20 @@ different jobs should get noticeably different resumes:
 - Put the most relevant bullets first in each job, and shorten the ones that matter less for the role.
 - Group skills so the ones the role needs come first.
 If no target role is given, write a general civilian resume with no summary.
+Either way, give every job a civilian job title, not a rank or a military position like Squad Leader.
+
+Lay the resume out as plain text, exactly like this:
+- Section headings in ALL CAPS on their own line. Always put work history under EXPERIENCE.
+- For each job: the job title on its own line, then the organization and location, then " | " and the dates,
+  then one line per bullet starting with "- ".
+- Education entries work the same way: the degree, then the school and location, then " | " and the date.
+- One blank line between jobs and before each heading. No markdown, no asterisks, no bold.
+
+For example:
+EXPERIENCE
+Logistics Supervisor
+[PLACE 1], [PLACE 2] | [DATES 1: 3 years]
+- Led a team of 12 through 60+ delivery runs with zero lost equipment
 
 Reply with JSON only, in this shape:
 {"resume": "the full rewritten resume as plain text", "changes": ["short note on a term you translated or how you tailored it", "..."]}"""
