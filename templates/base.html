@@ -27,8 +27,8 @@
     <body class="dot-grid text-zinc-800 antialiased min-h-screen">
             {% set paths = ['/', '/resume', '/jobs', '/certs'] %}
             {% set active = paths.index(request.path) if request.path in paths else 0 %}
-            <a href="/" class="absolute left-6 top-[43px] hidden lg:flex items-center h-14 print:hidden">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VetForward" class="h-14 w-auto">
+            <a href="/" class="absolute left-7 top-[34px] hidden lg:flex items-center h-[100px] print:hidden">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VetForward" class="h-[75px] w-auto">
             </a>
             <div class="mt-[43px] flex justify-center print:hidden">
                 <nav

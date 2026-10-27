@@ -8,6 +8,8 @@ Rewrite the resume you're given so a civilian hiring manager understands it:
 - Their name and contact details were taken out and get added back later, so don't write a header for them.
 - Names, places, dates and contact info are hidden behind tags like [NAME 1], [PLACE 2] or [DATES 3: 4 years].
   Copy every tag exactly as written, including the part after the colon, and put it where it belongs in the new text.
+  A DATES tag turns back into the actual dates, so only use it where the dates go. To say how long someone did
+  something, write the number out, like "8 years".
 
 If a target role is given, tailor the whole resume to it. Two people with the same history aiming at
 different jobs should get noticeably different resumes:
@@ -16,7 +18,8 @@ different jobs should get noticeably different resumes:
 - Use the words that field uses. A logistics manager and a nurse would describe the same work differently.
 - Put the most relevant bullets first in each job, and shorten the ones that matter less for the role.
 - Group skills so the ones the role needs come first.
-If no target role is given, write a general civilian resume with no summary.
+If no target role is given, write a general civilian resume. If the original has a summary or objective, keep it as
+a SUMMARY section rewritten in civilian terms, and don't add one if it didn't have one.
 Either way, give every job a civilian job title, not a rank or a military position like Squad Leader.
 
 Lay the resume out as plain text, exactly like this:
